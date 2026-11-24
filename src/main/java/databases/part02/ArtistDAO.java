@@ -1,5 +1,10 @@
 package databases.part02;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,8 +37,6 @@ public class ArtistDAO {
      * @return a list of all artists in the database.
      */
     public List<Artist> getArtists() {
-        List<Artist> artists = new ArrayList<>();
-
         /*
          * hint: see the class from part 1 for an example of how to connect to the
          * database and retrieve data from it. This time create new Artist objects
@@ -43,6 +46,22 @@ public class ArtistDAO {
          * to the database. You can't "hard code" the connection string, as that would
          * make tests run against your actual database, which may have unexpected data.
          */
+
+        List<Artist> artists = new ArrayList<>();
+
+        String sql = "SELECT ArtistId, Name FROM Artist ORDER BY Name ASC";
+        try (Connection connection = DriverManager.getConnection(connectionString);
+                PreparedStatement preparedStatement = connection.prepareStatement(sql);
+                ResultSet resultSet = preparedStatement.executeQuery()) {
+            while (resultSet.next()) {
+                long id = resultSet.getLong("ArtistId");
+                String name = resultSet.getString("Name");
+                Artist artist = new Artist(id, name);
+                artists.add(artist);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Could not retrieve artists", e);
+        }
 
         return artists;
     }
@@ -71,6 +90,15 @@ public class ArtistDAO {
          * to the database. You can't "hard code" the connection string, as that would
          * make tests run against your actual database, which may have unexpected data.
          */
+
+        List<Artist> artists = getArtists();
+
+        for (Artist artist : artists) {
+            if (artist.getId() == id) {
+                return artist;
+            }
+        }
+
         return null;
     }
 }
